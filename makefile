@@ -1,4 +1,4 @@
-SUBDIRS = lib 3rdlib network network/http_client  network/http_server
+SUBDIRS = lib 3rdlib network network/http_client
 installdir = /ott/test/
 #curday = $(shell date '+%Y%m%d')
 all:
