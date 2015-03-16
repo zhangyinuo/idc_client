@@ -19,6 +19,12 @@ static pthread_rwlock_t init_rwmutex;
 static pthread_rwlock_t offline_rwmutex;
 extern t_ip_info self_ipinfo;
 extern uint8_t self_stat ;
+
+#define MAX_SPIDER 256
+int spider_count = 0;
+
+char spider[MAX_SPIDER][16];
+
 static uint8_t fcslist[MAXFCS] = {0x0};
 int init_buff_size = 20480;
 static t_cs_dir_info  csinfo[DIR1][DIR2];
@@ -335,6 +341,42 @@ int get_isp_by_name(char *name)
 	return UNKNOW_ISP;
 }
 
+static int load_spider()
+{
+	char *v = myconfig_get_value("spider_ips");
+	if (v == NULL)
+	{
+		LOG(glogfd, LOG_ERROR, "spider_ips is null!\n");
+		return -1;
+	}
+
+	int last = 0;
+	while (1)
+	{
+		char *t = strchr(v, ',');
+		if (t)
+			*t = 0x0;
+		else
+			last = 1;
+
+		uint32_t uip = str2ip(v);
+		if (uip == INADDR_NONE)
+		{
+			LOG(glogfd, LOG_ERROR, "ERR %s:%d error %s\n", FUNC, LN, v);
+			return -1;
+		}
+
+		sprintf(spider[spider_count], "%s", v); 
+		spider_count++;
+
+		if (last == 1)
+			break;
+		v = t + 1;
+	}
+
+	return 0;
+}
+
 int vfs_init()
 {
 	memset(hostname, 0, sizeof(hostname));
@@ -391,6 +433,12 @@ int vfs_init()
 	if (reload_cfg())
 	{
 		LOG(glogfd, LOG_ERROR, "reload_cfg error %m\n");
+		return -1;
+	}
+
+	if (load_spider())
+	{
+		LOG(glogfd, LOG_ERROR, "load_spider error %m\n");
 		return -1;
 	}
 	return 0;
