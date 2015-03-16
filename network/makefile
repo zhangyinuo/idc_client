@@ -21,7 +21,8 @@ OBJ= main.o	\
 	vfs_localfile.o \
 	vfs_timer.o \
 	parsepara.o	\
-	vfs_file_filter.o 
+	vfs_file_filter.o \
+	p_file.o
 
 OBJ += $(SUBOBJS)
 		
