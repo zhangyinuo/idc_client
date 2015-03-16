@@ -38,6 +38,21 @@ static int get_url_dstip(char *buf, char **dstip, char **url)
 	return 0;
 }
 
+static int check_urls(char *url)
+{
+	int r = 0;
+	char *s = strchr(url, '?');
+	if (s)
+		*s = 0x0;
+	char *t = strrchr(url, '.');
+	if (t)
+	{
+		char *t1
+	}
+	*s = '?';
+	return r;
+}
+
 static int p_file_detail(char *file)
 {
 	FILE *fp = fopen(file, "r");
