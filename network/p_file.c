@@ -1,8 +1,13 @@
 #include "p_file.h"
 #include "log.h"
+#include "vfs_localfile.h"
 
 extern int glogfd;
 extern int max_p_file_thread;
+
+extern int topper_queue;
+extern int botter_queue;
+static __thread int idx_queue = 1;
 
 static int get_url_dstip(char *buf, char **dstip, char **url)
 {
@@ -16,7 +21,7 @@ static int get_url_dstip(char *buf, char **dstip, char **url)
 		s++;
 	}
 
-	url = s;
+	*url = s;
 	s = strchr(s, '\t');
 	if (s == NULL)
 		return -1;
@@ -30,7 +35,7 @@ static int get_url_dstip(char *buf, char **dstip, char **url)
 		s++;
 	}
 
-	dstip = s;
+	*dstip = s;
 	s = strchr(s, '\t');
 	if (s == NULL)
 		return -1;
@@ -47,10 +52,36 @@ static int check_urls(char *url)
 	char *t = strrchr(url, '.');
 	if (t)
 	{
-		char *t1
+		char *t1 = strchr(t, '/');
+		if (!t1)
+			r = strncmp(t+1, "htm", 3);
 	}
 	*s = '?';
 	return r;
+}
+
+static int push_new_task(t_task_base *base)
+{
+	if (try_touch_tmp_file(base) == LOCALFILE_OK)
+	{
+		LOG(glogfd, LOG_TRACE, "fname[%s:%s] do_newtask dup!\n", base->url, base->dstip);
+		return -1;
+	}
+	t_vfs_tasklist *task0 = NULL;
+	if (vfs_get_task(&task0, TASK_HOME))
+	{
+		LOG(glogfd, LOG_ERROR, "fname[%s:%s] do_newtask error!\n", base->url, base->dstip);
+		return -1;
+	}
+	t_vfs_taskinfo *task = &(task0->task);
+	memset(&(task->base), 0, sizeof(task->base));
+	memcpy(&(task->base), base, sizeof(task->base));
+	idx_queue++;
+	if (idx_queue > topper_queue)
+		idx_queue = botter_queue;
+	vfs_set_task(task0, idx_queue);
+	LOG(glogfd, LOG_NORMAL, "fname[%s:%s:%d] do_newtask ok!\n", base->url, base->dstip, idx_queue);
+	return 0;
 }
 
 static int p_file_detail(char *file)
@@ -75,6 +106,13 @@ static int p_file_detail(char *file)
 
 		if (check_urls(url))
 			continue;
+
+		t_task_base base;
+		memset(&base, 0, sizeof(base));
+		snprintf(base.url, sizeof(base.url), "%s", url);
+		snprintf(base.dstip, sizeof(base.dstip), "%s", dstip);
+
+		push_new_task(&base);
 	}
 
 	fclose(fp);
