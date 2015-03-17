@@ -348,6 +348,7 @@ static int load_spider()
 		LOG(glogfd, LOG_ERROR, "spider_ips is null!\n");
 		return -1;
 	}
+	spider_count = 0;
 
 	int last = 0;
 	while (1)
@@ -373,7 +374,7 @@ static int load_spider()
 		v = t + 1;
 	}
 
-	return 0;
+	return spider_count > 0 ? 0 : -1;
 }
 
 int vfs_init()
