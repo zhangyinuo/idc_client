@@ -23,6 +23,7 @@
 #include "fdinfo.h"
 #include "version.h"
 #include "log.h"
+#include "p_file.h"
 #include "vfs_so.h"
 #include "vfs_init.h"
 #include "vfs_task.h"
@@ -34,6 +35,7 @@
 
 int topper_queue = 1;
 int botter_queue = 1;
+int max_p_file_thread = 4;
 extern t_g_config g_config;
 t_ip_info self_ipinfo;
 time_t vfs_start_time;  /*vfs Æô¶¯Ê±¼ä*/
@@ -131,7 +133,7 @@ int main(int argc, char **argv) {
 	int i = 1;
 	t_thread_arg *arg = NULL;
 	topper_queue = 8;
-	for( ; i <= 8; i++)
+	for( ; i <= topper_queue; i++)
 	{
 		arg = &(args[i]);
 		arg->queue = i;
@@ -142,13 +144,14 @@ int main(int argc, char **argv) {
 			goto error;
 	}
 
-	arg = &(args[i]);
-	snprintf(arg->name, sizeof(arg->name), "./http_server.so");
-	LOG(glogfd, LOG_NORMAL, "prepare start %s\n", arg->name);
-	arg->port = 80;
-	arg->maxevent = myconfig_get_intval("vfs_data_maxevent", 4096);
-	if (init_vfs_thread(arg))
-		goto error;
+	for(i = 0 ; i < max_p_file_thread; i++)
+	{
+		if (init_p_file(i))
+		{
+			LOG(glogfd, LOG_ERROR, "init_p_file %d\n", i);
+			goto error;
+		}
+	}
 
 	thread_jumbo_title();
 	struct threadstat *thst = get_threadstat();

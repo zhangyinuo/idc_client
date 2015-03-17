@@ -31,6 +31,7 @@
 
 #define ALLMASK 0xFF
 #define DEFAULT_SCORE 50
+#define MAX_SPIDER 256
 extern int glogfd;
 extern list_head_t hothome;
 extern list_head_t isp_iplist[256];

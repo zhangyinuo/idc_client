@@ -12,6 +12,9 @@
  */
 volatile extern int maintain ;		//1-维护配置 0 -可以使用
 extern t_vfs_up_proxy g_proxy;
+extern int spider_count;
+
+extern char spider[MAX_SPIDER][16];
 
 static int active_connect(char *ip, int port)
 {
@@ -60,6 +63,7 @@ static void check_task()
 		once++;
 
 		t_task_base *base = (t_task_base *) (&(task->task.base));
+		char *ip = spider[r5hash(base->url)%spider_count];
 		char *t = strchr(base->url, '/');
 		if (t == NULL)
 		{
@@ -69,10 +73,10 @@ static void check_task()
 		}
 
 		*t = 0x0;
-		int fd = active_connect(base->dstip, 80);
+		int fd = active_connect(ip, 8090);
 		if (fd < 0)
 		{
-			LOG(vfs_sig_log, LOG_ERROR, "active_connect %s:80 error %m\n", base->dstip);
+			LOG(vfs_sig_log, LOG_ERROR, "active_connect %s:8090 error %m\n", ip);
 			vfs_set_task(task, TASK_HOME);
 			continue;
 		}

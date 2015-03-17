@@ -20,7 +20,6 @@ static pthread_rwlock_t offline_rwmutex;
 extern t_ip_info self_ipinfo;
 extern uint8_t self_stat ;
 
-#define MAX_SPIDER 256
 int spider_count = 0;
 
 char spider[MAX_SPIDER][16];
