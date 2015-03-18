@@ -58,7 +58,8 @@ static int check_urls(char *url)
 		if (!t1)
 			r = strncmp(t+1, "htm", 3);
 	}
-	*s = '?';
+	if (s)
+		*s = '?';
 	return r;
 }
 
@@ -126,6 +127,7 @@ static int p_file_detail(char *file)
 	}
 
 	fclose(fp);
+	unlink(file);
 	return 0;
 }
 
