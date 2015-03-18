@@ -138,7 +138,7 @@ int main(int argc, char **argv) {
 		arg = &(args[i]);
 		arg->queue = i;
 		snprintf(arg->name, sizeof(arg->name), "./http_client.so");
-		LOG(glogfd, LOG_NORMAL, "prepare start %s\n", arg->name);
+		LOG(glogfd, LOG_NORMAL, "prepare start %s %d\n", arg->name, i);
 		arg->maxevent = myconfig_get_intval("vfs_data_maxevent", 4096);
 		if (init_vfs_thread(arg))
 			goto error;

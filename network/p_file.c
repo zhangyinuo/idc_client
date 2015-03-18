@@ -1,3 +1,4 @@
+#include <sys/prctl.h>
 #include "p_file.h"
 #include "log.h"
 #include "vfs_localfile.h"
@@ -153,7 +154,13 @@ static int p_file_sub(char *path, int idx)
 
 static void * p_file_main(void *arg)
 {
+#ifndef PR_SET_NAME
+#define PR_SET_NAME 15
+#endif
 	int *idx = (int *)arg;
+	char name[16] = {0x0};
+	snprintf(name, sizeof(name), "p_file_%d", *idx);
+	prctl(PR_SET_NAME, name, 0, 0, 0);
 	char *indir = myconfig_get_value("file_indir");
 	if (indir == NULL)
 	{
