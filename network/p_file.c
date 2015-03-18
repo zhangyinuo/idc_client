@@ -167,6 +167,7 @@ static void * p_file_main(void *arg)
 #define PR_SET_NAME 15
 #endif
 	int *idx = (int *)arg;
+	LOG(glogfd, LOG_DEBUG, "%d thread start process!\n", *idx);
 	char name[16] = {0x0};
 	snprintf(name, sizeof(name), "p_file_%d", *idx);
 	prctl(PR_SET_NAME, name, 0, 0, 0);
