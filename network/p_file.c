@@ -194,13 +194,16 @@ static void * p_file_main(void *arg)
 
 int init_p_file(int idx)
 {
-	int arg = idx;
+	int *arg = malloc (sizeof(int));
+	if (arg == NULL)
+		return -1;
+	*arg = idx;
    	pthread_attr_t attr;
    	pthread_t tid;
 	int rc;
 	LOG(glogfd, LOG_NORMAL, "start %d %d p_file!\n", idx, arg);
 	pthread_attr_init(&attr);
-	if((rc = pthread_create(&tid, &attr, (void*(*)(void*))p_file_main, (void *)&arg)) != 0)
+	if((rc = pthread_create(&tid, &attr, (void*(*)(void*))p_file_main, (void *)arg)) != 0)
 	{
 	    printf("\7%s: pthread_create(): %m\n", strerror(errno));
 	    return -1;
