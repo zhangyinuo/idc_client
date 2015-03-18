@@ -28,5 +28,4 @@ install:
 	mkdir $(installdir)/path/delfile -p;
 	cd network; cp worker $(installdir)/bin; cp worker.conf $(installdir)/conf;
 	cd network/http_client; cp *.so $(installdir)/bin
-	cd network/http_server; cp *.so $(installdir)/bin
 	cd script/; cp *.sh $(installdir)/bin
