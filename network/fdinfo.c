@@ -29,7 +29,7 @@ int init_fdinfo(void) {
 	rlim.rlim_max = maxfds;
 	if(setrlimit(RLIMIT_NOFILE, &rlim) < 0) {
 		printf("\7Cannot increase file descriptors limit to %d\n", maxfds);
-		//return -1;
+		return -1;
 	}
 	
 	acon = (struct conn*)malloc(sizeof(struct conn) * maxfds);
