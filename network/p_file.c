@@ -201,7 +201,7 @@ int init_p_file(int idx)
    	pthread_attr_t attr;
    	pthread_t tid;
 	int rc;
-	LOG(glogfd, LOG_NORMAL, "start %d %d p_file!\n", idx, arg);
+	LOG(glogfd, LOG_NORMAL, "start %d %d p_file!\n", idx, *arg);
 	pthread_attr_init(&attr);
 	if((rc = pthread_create(&tid, &attr, (void*(*)(void*))p_file_main, (void *)arg)) != 0)
 	{
