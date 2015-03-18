@@ -35,10 +35,10 @@ static int active_connect(char *ip, int port)
 	return fd;
 }
 
-static int create_header(char *domain, char *url, char *httpheader)
+static int create_header(char *dstip, char *url, char *httpheader)
 {
-	int l = sprintf(httpheader, "GET /%s HTTP/1.1\r\n", url);
-	l += sprintf(httpheader + l, "Host: %s\r\nUser-Agent: HTTPCLIENT\r\nConnection: Close\r\n\r\n", domain);
+	int l = sprintf(httpheader, "GET /ED_SPIDER HTTP/1.1\r\n");
+	l += sprintf(httpheader + l, "URL: %s\r\ndstip: %s\r\nConnection: Close\r\n\r\n", url, dstip);
 	return l;
 }
 
@@ -83,7 +83,7 @@ static void check_task()
 
 		vfs_set_task(task, TASK_HOME);
 		char httpheader[1024] = {0x0};
-		create_header(base->url, t + 1, httpheader);
+		create_header(base->dstip, t + 1, httpheader);
 		active_send(fd, httpheader);
 		*t = '/';
 
