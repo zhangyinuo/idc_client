@@ -72,7 +72,6 @@ static void check_task()
 			continue;
 		}
 
-		*t = 0x0;
 		int fd = active_connect(ip, 8090);
 		if (fd < 0)
 		{
@@ -83,9 +82,8 @@ static void check_task()
 
 		vfs_set_task(task, TASK_HOME);
 		char httpheader[1024] = {0x0};
-		create_header(base->dstip, t + 1, httpheader);
+		create_header(base->dstip, base->url, httpheader);
 		active_send(fd, httpheader);
-		*t = '/';
 
 		struct conn *curcon = &acon[fd];
 		vfs_cs_peer *peer = (vfs_cs_peer *) curcon->user;
