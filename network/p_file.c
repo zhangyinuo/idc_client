@@ -1,5 +1,6 @@
 #include <sys/prctl.h>
 #include "p_file.h"
+#include "GeneralHashFunctions.h"
 #include "log.h"
 #include "vfs_localfile.h"
 
@@ -113,6 +114,14 @@ static int p_file_detail(char *file)
 		snprintf(base.url, sizeof(base.url), "%s", url);
 		snprintf(base.dstip, sizeof(base.dstip), "%s", dstip);
 
+
+		uint32_t h1, h2, h3;
+		get_3_hash(base.url, &h1, &h2, &h3);
+		uint32_t idx = h1 & 0x3F;
+		snprintf(base.filename, sizeof(base.filename), "%s/%u/%u/%u/%u", g_config.docroot, idx, h1, h2, h3);
+		if (access(base.filename, F_OK) == 0)
+			continue;
+		snprintf(base.tmpfile, sizeof(base.tmpfile), "%s/%u/%u/%u/%u.tmp", g_config.docroot, idx, h1, h2, h3);
 		push_new_task(&base);
 	}
 
