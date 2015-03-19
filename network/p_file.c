@@ -11,11 +11,26 @@ extern int topper_queue;
 extern int botter_queue;
 static __thread int idx_queue = 1;
 
-static int get_url_dstip(char *buf, char **dstip, char **url)
+static int get_url_dstip(char *buf, char **dstip, char **url, char **ptime)
 {
 	char *s = buf;
 	int i = 0;
-	for (; i < 3; i++)
+	for (i = 0; i < 2; i++)
+	{
+		s = strchr(s, '\t');
+		if (s == NULL)
+			return -1;
+		s++;
+	}
+
+	*ptime = s;
+	s = strchr(s, '\t');
+	if (s == NULL)
+		return -1;
+	*s = 0x0;
+	s++;
+
+	for (i = 0; i < 1; i++)
 	{
 		s = strchr(s, '\t');
 		if (s == NULL)
@@ -29,6 +44,7 @@ static int get_url_dstip(char *buf, char **dstip, char **url)
 		return -1;
 	*s = 0x0;
 	s++;
+
 	for (i = 0; i < 2; i++)
 	{
 		s = strchr(s, '\t');
@@ -87,7 +103,7 @@ static int push_new_task(t_task_base *base)
 	return 0;
 }
 
-static int p_file_detail(char *file)
+static int p_file_detail(char *file, char *tmpfile, char *outfile)
 {
 	FILE *fp = fopen(file, "r");
 	if (fp == NULL)
@@ -96,12 +112,21 @@ static int p_file_detail(char *file)
 		return -1;
 	}
 
+	FILE *fpout = fopen(tmpfile, "w+");
+	if (fpout == NULL)
+	{
+		LOG(glogfd, LOG_ERROR, "openfile %s err %m\n", tmpfile);
+		fclose(fp);
+		return -1;
+	}
+
 	char *url;
 	char *dstip;
+	char *ptime;
 	char buf[2048] = {0x0};
 	while (fgets(buf, sizeof(buf), fp))
 	{
-		if (get_url_dstip(buf, &dstip, &url))
+		if (get_url_dstip(buf, &dstip, &url, &ptime))
 		{
 			LOG(glogfd, LOG_ERROR, "get url dstip error %s\n", buf);
 			continue;
@@ -124,14 +149,21 @@ static int p_file_detail(char *file)
 			continue;
 		snprintf(base.tmpfile, sizeof(base.tmpfile), "%s/%u/%u/%u/%u.tmp", g_config.docroot, idx, h1, h2, h3);
 		push_new_task(&base);
+		fprintf(fpout, "%s|%u|%u|%u\n", ptime, h1, h2, h3);
 	}
 
 	fclose(fp);
+	fclose(fpout);
 	unlink(file);
+	if (rename(tmpfile, outfile))
+	{
+		LOG(glogfd, LOG_ERROR, "rename %s to %s error %m\n", tmpfile, outfile);
+		return -1;
+	}
 	return 0;
 }
 
-static int p_file_sub(char *path, int idx)
+static int p_file_sub(char *path, int idx, char *tmpdir, char *outdir)
 {
 	int ret = 0;
 	DIR *dp;
@@ -153,7 +185,12 @@ static int p_file_sub(char *path, int idx)
 		if (idx != r5hash(file)%max_p_file_thread)
 			continue;
 
-		if (p_file_detail(file))
+		char tmpfile[256] = {0x0};
+		char outfile[256] = {0x0};
+
+		snprintf(tmpfile, sizeof(tmpfile), "%s/%s", tmpdir, dirp->d_name);
+		snprintf(outfile, sizeof(outfile), "%s/%s", outdir, dirp->d_name);
+		if (p_file_detail(file, tmpfile, outfile))
 		{
 			ret = -1;
 			break;
@@ -174,16 +211,18 @@ static void * p_file_main(void *arg)
 	snprintf(name, sizeof(name), "p_file_%d", *idx);
 	prctl(PR_SET_NAME, name, 0, 0, 0);
 	char *indir = myconfig_get_value("file_indir");
-	if (indir == NULL)
+	char *tmpdir = myconfig_get_value("file_tmpdir");
+	char *outdir = myconfig_get_value("file_outdir");
+	if (indir == NULL || tmpdir == NULL || outdir == NULL)
 	{
-		LOG(glogfd, LOG_ERROR, "file_indir is empty!\n");
+		LOG(glogfd, LOG_ERROR, "file_indir tmpdir outdir is empty!\n");
 		stop = 1;
 		return NULL;
 	}
 	LOG(glogfd, LOG_DEBUG, "%d thread start process!\n", *idx);
 	while (1)
 	{
-		if (p_file_sub(indir, *idx))
+		if (p_file_sub(indir, *idx, tmpdir, outdir))
 		{
 			LOG(glogfd, LOG_ERROR, "p_file_sub error %m!\n");
 			stop = 1;

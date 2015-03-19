@@ -14,7 +14,7 @@ clean:
 	done;
 
 install:
-	rm -rf $(installdir)/*;
+	rm -rf $(installdir)/bin;
 	mkdir $(installdir)/bin -p;
 	mkdir $(installdir)/log -p;
 	mkdir $(installdir)/conf -p;
